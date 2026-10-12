@@ -20,3 +20,10 @@ docs/demo/*.gif
 
 # Website build output (npm run site); GitHub Pages builds it in CI.
 site/dist/
+
+# KovaForge local credentials
+.env
+.env.*
+*.env
+secrets.json
+credentials.*

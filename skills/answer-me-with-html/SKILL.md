@@ -1,21 +1,56 @@
 ---
 name: answer-me-with-html
+version: 0.5.3
+author: QingYunA; KovaForge adaptation by Vladislava Kova
+license: MIT
+metadata:
+  hermes:
+    tags: [html, visualization, diagrams, explanations, reports, comparisons, decisions, discord, accessibility]
+    related_skills: [safe-public-posting, xerahs-url-publishing]
+required_environment_variables:
+  - ANSWER_ME_WITH_HTML_SKILL_DIR
+  - AM_HOME
+required_commands:
+  - node
 argument-hint: "[config [key value] | clean | update]"
-description: >-
-  Turns an answer into a one-page visual HTML explainer: the model writes a short Markdown draft and
-  the bundled CLI builds one page. Use it proactively and liberally, without being asked, whenever a
-  page would help the reader more than plain text, even if plain text would also work: any explanation
-  of how something works or how parts relate (flow, request path, architecture, code or folder
-  structure, state machine, lifecycle, history); any comparison, trade-off or decision with pros and
-  cons; any diagnosis, review or investigation, especially with several causes or findings to rank;
-  any answer with a table, a numbered or ranked list, steps, branches or several sections; or when the
-  user says "I don't get it / draw it / explain visually / 讲讲原理 / 没看懂 / 画个图". When in doubt, use it: a
-  page is quick and cheap to make. Also for explainer videos ("make a video", "做个视频") and for changing
-  its settings. Skip only for small talk, a trivial one-line answer, or when the user asks for plain
-  text.
+description: Create a one-page visual HTML explanation for complex questions, comparisons, decisions, or investigations when a diagram or structured page helps more than plain text.
 ---
 
 # Answer me with HTML: answer a complex question with one HTML page
+
+## Overview
+
+Use this skill for a complex explanation, comparison, decision, or investigation where a visual page makes the answer easier to understand. Do not create a page for a short status reply, routine operation, casual chat, or when the user requests plain text. Forked from `QingYunA/answer-me-with-html` (MIT). This KovaForge adaptation changes delivery for Discord and keeps the source under version control.
+
+## Execution Instructions
+
+1. Confirm Node.js 20+ and resolve this skill's directory. Default: `${HOME}/.agents/skills/answer-me-with-html`; override with `ANSWER_ME_WITH_HTML_SKILL_DIR`.
+2. Write a short Markdown draft following the component rules below. Render with `node "${ANSWER_ME_WITH_HTML_SKILL_DIR:-$HOME/.agents/skills/answer-me-with-html}/scripts/am.mjs" render - --no-open` and a quoted heredoc. Never auto-open the browser in an agent session.
+3. Verify the page renders and inspect the output for sensitive material before sharing. The page embeds its Markdown source. Do not include private code, credentials, internal identifiers, or personal data in a public page.
+4. In Discord, give the conclusion in the message and attach the `.html` file with `message(action="upload-file")` or the available attachment mechanism. A local `file://` link is not useful to remote Discord readers. Do not publish the page to a public URL unless the user asks for one.
+5. For local GUI surfaces that support file links, use the generated absolute path. Keep the text reply self-contained even when a page is attached.
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `ANSWER_ME_WITH_HTML_SKILL_DIR` | `$HOME/.agents/skills/answer-me-with-html` | Directory containing this SKILL.md and bundled CLI. |
+| `AM_HOME` | `$HOME/.answer-me-with-html` | Renderer settings and generated pages; set to a task-specific directory when needed. |
+
+## Verification Checklist
+
+- [ ] `node --version` is 20 or newer; `node "$ANSWER_ME_WITH_HTML_SKILL_DIR/scripts/am.mjs" --version` succeeds.
+- [ ] The draft renders with `--no-open` and the output file exists.
+- [ ] The rendered page contains no secrets or unintended private source material.
+- [ ] The Discord reply gives the answer in text and the page is attached, if a page was warranted.
+- [ ] Paths remain configurable, and tags and related skills cover all delivery domains.
+
+## Known Pitfalls
+
+- The upstream `file://` reply pattern does not deliver a usable page in Discord. Attach the file there.
+- `am` embeds the draft source in the HTML. Review content before external delivery.
+- The CLI may check for updates; rendering should not require network access. Set `AM_HOME` to isolate generated pages and settings for tests.
+- Install from the KovaForge fork; an upstream reinstall may replace this adaptation.
 
 You write only the **content draft** (extended Markdown). The `am` CLI does all layout, colours, dark mode and diagram coordinates. **Do not hand-write HTML / CSS / SVG.**
 
@@ -25,7 +60,7 @@ Reply to the user, and write the draft, in the user's language.
 
 Arguments for this call: `$ARGUMENTS`
 
-When the arguments start with `config`, `clean` or `update`, or the user asks to change a setting, clean up pages or update this skill: read `${CLAUDE_SKILL_DIR}/references/settings.md` and follow it. That turn produces no page.
+When the arguments start with `config`, `clean` or `update`, or the user asks to change a setting, clean up pages or update this skill: read `${ANSWER_ME_WITH_HTML_SKILL_DIR:-$HOME/.agents/skills/answer-me-with-html}/references/settings.md` and follow it. That turn produces no page.
 
 ## 1. Decide: produce a page or not
 
@@ -44,8 +79,8 @@ If the context contains the `[answer-me-with-html always-on]` reminder (the user
 - Whenever this turn gives a conclusion, summary, plan, comparison, review or explanation, attach a page.
 - Do not skip it because "the answer is short". If there is a conclusion, produce a page.
 - For everyday conclusions use a small page with 2–4 panels: one callout with the conclusion, plus one table or one diagram. Do not add panels just to fill space.
-- Render with `--no-open`, so no browser window interrupts the user. The user opens the page by clicking the path at the end of the reply.
-- Order: render the page first, then write the text reply. The reply is the last thing in the turn, with the page link on its last line (see step 5). Do not write the reply and then call `am render`.
+- Render with `--no-open`, so no browser window interrupts the user. Deliver the page for the current surface as described in step 5.
+- Order: render the page first, then write the text reply. Deliver the page before the final text reply when the surface requires an attachment. Do not write the reply and then call `am render`.
 - Produce no page for small talk, one or two sentences with no conclusion, pure command output, or when the user asks for plain text.
 
 ## 2. Workflow (one Bash call)
@@ -53,10 +88,10 @@ If the context contains the `[answer-me-with-html always-on]` reminder (the user
 The CLI is bundled in this skill's directory: `scripts/am.mjs`, a single file with no dependencies to install; it needs only Node.js 20+. Below, `am` always means:
 
 ```bash
-node "${CLAUDE_SKILL_DIR}/scripts/am.mjs"
+node "${ANSWER_ME_WITH_HTML_SKILL_DIR:-$HOME/.agents/skills/answer-me-with-html}/scripts/am.mjs"
 ```
 
-In Claude Code, the path above is replaced with this skill's directory automatically. If you see the variable unreplaced (other agents), replace it with the absolute path of the directory that contains this SKILL.md. When the skill was loaded with a "Base directory for this skill" line (DeepSeek Harness), that path is this directory. If the user installed the `am` command globally, you can also use `am` directly.
+Set `ANSWER_ME_WITH_HTML_SKILL_DIR` to the absolute path of the directory that contains this SKILL.md if the default install path differs. When the skill was loaded with a "Base directory for this skill" line (DeepSeek Harness), that path is this directory. If the user installed the `am` command globally, you can also use `am` directly.
 
 1. First list 3–8 panels in your head. Each panel answers one sub-question only.
    The draft language follows the language of the user's question: an English question gets an English draft, a Chinese question a Chinese draft, a Japanese question a Japanese draft. The page button labels, `<html lang>` and the STE check rules switch automatically by the draft language (a draft containing kana counts as Japanese); STE applies the English or Chinese rules to each sentence by its language (Japanese sentences get only the sentence-length and paragraph-length checks, with the same character limits as Chinese; any other language gets only those two checks, counted in words). To set the language yourself, write `lang:` in the frontmatter: `en`, `zh` (Simplified Chinese), `zh-Hant` or `zh-TW` (Traditional Chinese), `ja`, or any other language tag such as `fr` or `ko`. Detection reads Chinese (Simplified, or Traditional when the text has characters written in only one form), Japanese, Korean, and Cyrillic, Arabic, Hebrew, Thai and Greek text, and reads all Latin-script text as English. Declare the language when the user writes a Latin-script language other than English, when a Chinese text is too short or too plain to show Traditional characters, or when an exact tag matters (Arabic script also writes Persian, Cyrillic also Ukrainian). A language without its own labels still gets the right `<html lang>`, with English page labels.
@@ -64,7 +99,7 @@ In Claude Code, the path above is replaced with this skill's directory automatic
 3. Render in one go with a heredoc:
 
 ````bash
-node "${CLAUDE_SKILL_DIR}/scripts/am.mjs" render - <<'AM_EOF'
+node "${ANSWER_ME_WITH_HTML_SKILL_DIR:-$HOME/.agents/skills/answer-me-with-html}/scripts/am.mjs" render - --no-open <<'AM_EOF'
 ---
 title: Title
 ---
@@ -82,15 +117,12 @@ AM_EOF
    - `STE n warnings`: rewrite the flagged lines as suggested, then render again. Retry at most 2 rounds; if warnings remain, keep the last page and say so.
    - Every time you render again after a `✓`, add `--replace <path from the last ✓ line>`. The CLI deletes that page once the new one is written, so one answer leaves one page.
    - `! Cleanup hint: …` or `! Update hint: …`: pass it on to the user in one sentence at the end of the reply, and ask whether to clean up / update. **Do not run am clean or the update command yourself**; wait until the user agrees. The CLI throttles these: the cleanup hint appears at most once every 7 days, the update hint at most once every 3 days.
-5. Reply in the terminal with only 2–3 lines: one core conclusion + the page link. Do not paste the draft or the HTML back into the terminal. Write this reply after the render, as the last step of the turn: render the page first, then reply. No tool call comes after the reply.
-   If the render output has a `link:` line, the user runs `am serve`: use that URL as the page link instead, with the URL as the label too, and skip the `file://` link below. Never start `am serve` yourself; only the user starts it.
-   Otherwise write the page link as a Markdown link to a `file://` URL, with the URL as the label too: `[file:///abs/path.html](file:///abs/path.html)`. Take the absolute path from the `✓` line and add `file://` in front; do not percent-encode it. GUI hosts (Codex, Antigravity) render this as a clickable link, and a terminal still shows the full URL.
-   If you have a `present` tool (DeepSeek Harness), call it with the absolute path from the `✓` line before you reply, so the user can open the page from a card in the app. Still end the reply with the link.
+5. Reply with the conclusion in text, then deliver the page for the current surface. In Discord, attach the `.html` file; do not use a local `file://` link. On a local GUI surface that supports file links, link the absolute path. If an attachment is unavailable, do not claim the page was delivered; give the substantive answer in text. Do not start `am serve` or publish to a public URL unless the user asks.
 
 When a page already exists and only one panel needs to change, do not rewrite the whole page. Take the source draft from the HTML's `#am-source`, replace only the matching `##` section, and overwrite the page in place:
 
 ````bash
-node "${CLAUDE_SKILL_DIR}/scripts/am.mjs" patch page.html --panel "Panel title" <<'AM_EOF'
+node "${ANSWER_ME_WITH_HTML_SKILL_DIR:-$HOME/.agents/skills/answer-me-with-html}/scripts/am.mjs" patch page.html --panel "Panel title" <<'AM_EOF'
 ## A Panel title
 New content
 AM_EOF
@@ -181,4 +213,4 @@ A reply starts with `# Re: <page title>` and lists `Decisions`, `Comments` and `
 
 Use only when the user explicitly asks for a video ("make a video", "explain it as a video", "3b1b style", "explainer video"). Do not produce a video unasked in always-on mode either.
 
-Before you write a video draft, read `${CLAUDE_SKILL_DIR}/references/video.md` and follow it.
+Before you write a video draft, read `${ANSWER_ME_WITH_HTML_SKILL_DIR:-$HOME/.agents/skills/answer-me-with-html}/references/video.md` and follow it.
