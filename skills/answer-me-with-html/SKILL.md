@@ -118,6 +118,9 @@ AM_EOF
    - Every time you render again after a `✓`, add `--replace <path from the last ✓ line>`. The CLI deletes that page once the new one is written, so one answer leaves one page.
    - `! Cleanup hint: …` or `! Update hint: …`: pass it on to the user in one sentence at the end of the reply, and ask whether to clean up / update. **Do not run am clean or the update command yourself**; wait until the user agrees. The CLI throttles these: the cleanup hint appears at most once every 7 days, the update hint at most once every 3 days.
 5. Reply with the conclusion in text, then deliver the page for the current surface. In Discord, attach the `.html` file; do not use a local `file://` link. On a local GUI surface that supports file links, link the absolute path. If an attachment is unavailable, do not claim the page was delivered; give the substantive answer in text. Do not start `am serve` or publish to a public URL unless the user asks.
+   If the render output has a `link:` line, the user runs `am serve`: use that URL as the page link instead, with the URL as the label too. Never start `am serve` yourself; only the user starts it.
+   If you have a `present` tool (DeepSeek Harness), call it with the absolute path from the `✓` line before you reply, so the user can open the page from a card in the app. Still end the reply with the link.
+   If you have an in-app browser tool (such as `open_in_codex` in OpenAI Codex), the render output has a `link:` line, and `am config get open` is not `off`, call that tool with the link (`open_in_codex`: `target: { type: "browser", url: "<link>" }`) so the user sees the page in the app's browser panel. Still end the reply with the link.
 
 When a page already exists and only one panel needs to change, do not rewrite the whole page. Take the source draft from the HTML's `#am-source`, replace only the matching `##` section, and overwrite the page in place:
 
@@ -150,7 +153,7 @@ Table status words: ok / no / warn (may carry text: "ok approved") → ✓ / ✗
 ## B {bare}            ← bare: no title bar (suits a kv title block)
 ```
 
-- The panel letter ID can be omitted; it is assigned automatically.
+- The panel letter ID can be omitted; it is assigned automatically. A capital letter and a space before a capitalized word is read as the ID, so write the ID before a title such as `A Miss Goes Unseen`: `## B A Miss Goes Unseen`.
 - ```html / ```svg fenced blocks are embedded as-is. **Use them only when no component can express the content.**
 - Math in text: `$x^2$` inline, and `$$` on its own line before and after a block; put a long formula in a `$$` block. `\$` writes a dollar sign. Diagrams and video take no math.
 - Full reference: `am help format`; component syntax: `am help <component>`; component list: `am list`.
